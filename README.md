@@ -16,7 +16,7 @@ A Delphi Implementation of [ULID](https://github.com/ulid/spec) for Delphi XE2 o
 
 Install VSoft.Ulid in the DPM IDE plugin,  or 
 ```
-dpm install VSoft.Ulid .\yourproject
+dpm install VSoft.Ulid .\yourproject.dproj
 ```
 ### Manually
 Clone the repository and add the VSoft.Ulid.pas file to your project, or add the repo\Source folder to your project's search path.
