@@ -31,8 +31,6 @@ type
     FTimeStamp5 : byte;
 
     // Randomness(80bits)
-//    FRandomness : array[0..9] of byte;
-
     FRandomness0 : byte;
     FRandomness1 : byte;
     FRandomness2 : byte;
@@ -52,12 +50,12 @@ type
     class function InternalNewUlidFromBytes(base32bytes : TBytes) : TUlid;static;
     class constructor Init;
   public
-	  class function TryParse(const base32Str : string; out ulid : TUlId) : boolean;static;
+    class function TryParse(const base32Str : string; out ulid : TUlId) : boolean;static;
     class function Parse(const base32Str : string) : TUlId;static;
-	  class function Create : TUlid;static;
+    class function Create : TUlid;static;
     class function Empty : TUlid;static;
     class function FromGuid(value : TGuid) : TUlid;static;
-  	function ToString : string;
+    function ToString : string;
     function Equals(value : TUlId) : boolean;
     function IsEmpty : boolean;
   end;
@@ -177,7 +175,7 @@ end;
 
 class constructor TUlid.Init;
 begin
-    FXorShift64 := TXorShift64.Create(Random64);
+  FXorShift64 := TXorShift64.Create(Random64);
 end;
 
 class function TUlid.InternalNewUlid(timestamp: UInt64): TUlid;
