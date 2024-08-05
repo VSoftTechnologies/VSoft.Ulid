@@ -10,26 +10,22 @@ uses
   VSoft.Ulid;
 
 procedure BM_Create(const state: TState);
-var
-  ulid : TUlid;
 begin
   // Perform setup here
   for var _ in state do
   begin
     // This code gets timed
-    ulid := TUlid.Create;
+    var ulid := TUlid.Create;
   end;
 end;
 
 procedure BM_Parse(const state: TState);
-var
-  ulid : TUlid;
 begin
   // Perform setup here
   for var _ in state do
   begin
     // This code gets timed
-    ulid := TUlid.Parse('01J4JC3MY6S461H3P96FB4QAGS');
+    var ulid := TUlid.Parse('01J4JC3MY6S461H3P96FB4QAGS');
   end;
 end;
 
