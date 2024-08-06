@@ -14,8 +14,8 @@
         <DPMCompiler>11.0</DPMCompiler>
         <DPMCache Condition="'$(DPMCache)' == ''">$(APPDATA)\.dpm\packages</DPMCache>
         <DPM>$(DPMCache)\$(DPMCompiler)\$(Platform)</DPM>
-        <DPMSearch Condition="'$(Platform)'=='Win32'">$(DPM)\VSoft.Ulid\1.0.0\Source;$(DPM)\Spring4D.Benchmark\0.2.0\source;</DPMSearch>
-        <DPMSearch Condition="'$(Platform)'=='Win64'">$(DPM)\Spring4D.Benchmark\0.2.0\source;$(DPM)\VSoft.Ulid\1.0.0\Source;</DPMSearch>
+        <DPMSearch Condition="'$(Platform)'=='Win32'">$(DPM)\Spring4D.Benchmark\0.2.0\source</DPMSearch>
+        <DPMSearch Condition="'$(Platform)'=='Win64'">$(DPM)\Spring4D.Benchmark\0.2.0\source</DPMSearch>
     </PropertyGroup>
     <PropertyGroup Condition="'$(Config)'=='Base' or '$(Base)'!=''">
         <Base>true</Base>
@@ -97,6 +97,7 @@
         <DelphiCompile Include="$(MainSource)">
             <MainSource>MainSource</MainSource>
         </DelphiCompile>
+        <DCCReference Include="..\Source\VSoft.Ulid.pas"/>
         <BuildConfiguration Include="Base">
             <Key>Base</Key>
         </BuildConfiguration>
@@ -129,9 +130,7 @@
         <ProjectFileVersion>12</ProjectFileVersion>
         <DPM>
             <PackageReference id="Spring4D.Benchmark" platform="Win32" version="0.2.0"/>
-            <PackageReference id="VSoft.Ulid" platform="Win32" version="1.0.0"/>
             <PackageReference id="Spring4D.Benchmark" platform="Win64" version="0.2.0"/>
-            <PackageReference id="VSoft.Ulid" platform="Win64" version="1.0.0"/>
         </DPM>
     </ProjectExtensions>
     <Import Project="$(BDS)\Bin\CodeGear.Delphi.Targets" Condition="Exists('$(BDS)\Bin\CodeGear.Delphi.Targets')"/>

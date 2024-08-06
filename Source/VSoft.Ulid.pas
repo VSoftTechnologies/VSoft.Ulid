@@ -1,4 +1,4 @@
-unit VSoft.Ulid;
+﻿unit VSoft.Ulid;
 
 
 interface
@@ -30,7 +30,6 @@ type
     FTimeStamp4 : byte;
     FTimeStamp5 : byte;
 
-    // Randomness(80bits)
     FRandomness0 : byte;
     FRandomness1 : byte;
     FRandomness2 : byte;
@@ -47,7 +46,7 @@ type
       FXorShift64 : TXorShift64;
   private
     class function InternalNewUlid(timestamp : UInt64) : TUlid;static;
-    class function InternalNewUlidFromBytes(base32bytes : TBytes) : TUlid;static;
+    class function InternalNewUlidFromBytes(const base32bytes : TBytes) : TUlid;static;
     class constructor Init;
   public
     class function TryParse(const base32Str : string; out ulid : TUlId) : boolean;static;
@@ -99,38 +98,41 @@ begin
 end;
 
 function TUlid.ToString : string;
+var
+  p : PChar;
 begin
   SetLength(result, base32StringLen);
+  p := Pointer(result);
 
   // timestamp
-  result[1] := Base32Text[(FTimestamp0 and 224) shr 5];
-  result[2] := Base32Text[FTimestamp0 and 31];
-  result[3] := Base32Text[(FTimestamp1 and 248) shr 3];
-  result[4] := Base32Text[((FTimestamp1 and 7) shl 2) or ((FTimestamp2 and 192) shr 6)];
-  result[5] := Base32Text[(FTimestamp2 and 62) shr 1];
-  result[6] := Base32Text[((FTimestamp2 and 1) shl 4) or ((FTimestamp3 and 240) shr 4)];
-  result[7] := Base32Text[((FTimestamp3 and 15) shl 1) or ((FTimestamp4 and 128) shr 7)];
-  result[8] := Base32Text[(FTimestamp4 and 124) shr 2];
-  result[9] := Base32Text[((FTimestamp4 and 3) shl 3) or ((FTimestamp5 and 224) shr 5)];
-  result[10] := Base32Text[FTimestamp5 and 31];
+  p[0] := Base32Text[(FTimestamp0 and 224) shr 5];
+  p[1] := Base32Text[FTimestamp0 and 31];
+  p[2] := Base32Text[(FTimestamp1 and 248) shr 3];
+  p[3] := Base32Text[((FTimestamp1 and 7) shl 2) or ((FTimestamp2 and 192) shr 6)];
+  p[4] := Base32Text[(FTimestamp2 and 62) shr 1];
+  p[5] := Base32Text[((FTimestamp2 and 1) shl 4) or ((FTimestamp3 and 240) shr 4)];
+  p[6] := Base32Text[((FTimestamp3 and 15) shl 1) or ((FTimestamp4 and 128) shr 7)];
+  p[7] := Base32Text[(FTimestamp4 and 124) shr 2];
+  p[8] := Base32Text[((FTimestamp4 and 3) shl 3) or ((FTimestamp5 and 224) shr 5)];
+  p[9] := Base32Text[FTimestamp5 and 31];
 
   // FRandomness
-  result[11] := Base32Text[(FRandomness0 and 248) shr 3];
-  result[12] := Base32Text[((FRandomness0 and 7) shl 2) or ((FRandomness1 and 192) shr 6)];
-  result[13] := Base32Text[(FRandomness1 and 62) shr 1];
-  result[14] := Base32Text[((FRandomness1 and 1) shl 4) or ((FRandomness2 and 240) shr 4)];
-  result[15] := Base32Text[((FRandomness2 and 15) shl 1) or ((FRandomness3 and 128) shr 7)];
-  result[16] := Base32Text[(FRandomness3 and 124) shr 2];
-  result[17] := Base32Text[((FRandomness3 and 3) shl 3) or ((FRandomness4 and 224) shr 5)];
-  result[18] := Base32Text[FRandomness4 and 31];
-  result[19] := Base32Text[(FRandomness5 and 248) shr 3];
-  result[20] := Base32Text[((FRandomness5 and 7) shl 2) or ((FRandomness6 and 192) shr 6)];
-  result[21] := Base32Text[(FRandomness6 and 62) shr 1];
-  result[22] := Base32Text[((FRandomness6 and 1) shl 4) or ((FRandomness7 and 240) shr 4)];
-  result[23] := Base32Text[((FRandomness7 and 15) shl 1) or ((FRandomness8 and 128) shr 7)];
-  result[24] := Base32Text[(FRandomness8 and 124) shr 2];
-  result[25] := Base32Text[((FRandomness8 and 3) shl 3) or ((FRandomness9 and 224) shr 5)];
-  result[26] := Base32Text[FRandomness9 and 31];
+  p[10] := Base32Text[(FRandomness0 and 248) shr 3];
+  p[11] := Base32Text[((FRandomness0 and 7) shl 2) or ((FRandomness1 and 192) shr 6)];
+  p[12] := Base32Text[(FRandomness1 and 62) shr 1];
+  p[13] := Base32Text[((FRandomness1 and 1) shl 4) or ((FRandomness2 and 240) shr 4)];
+  p[14] := Base32Text[((FRandomness2 and 15) shl 1) or ((FRandomness3 and 128) shr 7)];
+  p[15] := Base32Text[(FRandomness3 and 124) shr 2];
+  p[16] := Base32Text[((FRandomness3 and 3) shl 3) or ((FRandomness4 and 224) shr 5)];
+  p[17] := Base32Text[FRandomness4 and 31];
+  p[18] := Base32Text[(FRandomness5 and 248) shr 3];
+  p[19] := Base32Text[((FRandomness5 and 7) shl 2) or ((FRandomness6 and 192) shr 6)];
+  p[20] := Base32Text[(FRandomness6 and 62) shr 1];
+  p[21] := Base32Text[((FRandomness6 and 1) shl 4) or ((FRandomness7 and 240) shr 4)];
+  p[22] := Base32Text[((FRandomness7 and 15) shl 1) or ((FRandomness8 and 128) shr 7)];
+  p[23] := Base32Text[(FRandomness8 and 124) shr 2];
+  p[24] := Base32Text[((FRandomness8 and 3) shl 3) or ((FRandomness9 and 224) shr 5)];
+  p[25] := Base32Text[FRandomness9 and 31];
 
 
 end;
@@ -152,7 +154,7 @@ end;
 
 class function TUlid.Empty: TULid;
 begin
-  ZeroMemory(@result.FTimeStamp0, SizeOf(TUlId)); //not strictly needed;
+  result := Default(TUlid);
 end;
 
 function TUlid.Equals(value: TUlId): boolean;
@@ -178,6 +180,9 @@ begin
   FXorShift64 := TXorShift64.Create(Random64);
 end;
 
+type
+  TUInt64Rec = array[0..3] of Word;
+
 class function TUlid.InternalNewUlid(timestamp: UInt64): TUlid;
 var
   random : UInt64;
@@ -191,14 +196,21 @@ begin
   result.FTimeStamp3 := ts.Bytes[2];
   result.FTimeStamp4 := ts.Bytes[1];
   result.FTimeStamp5 := ts.Bytes[0];
+
+//  random := FXorShift64.Next;
+//  result.FRandomness0_1 := TUInt64Rec(random)[0];
+//  random := FXorShift64.Next;
+//  result.FRandomness2_9 := random;
+
   random := FXorShift64.Next;
-  Move(random,result.FRandomness0, 2); // randomness 0-1
+  PNativeUInt(@result.FRandomness0)^ := NativeUInt(random);  // it is safe to overflow here, might yeild better and simpler asm instruction
   random := FXorShift64.Next;
-  Move(random,result.FRandomness2, 8); // randomness 2-9
+  PUInt64(@result.FRandomness2)^ := random;
+
 end;
 
 
-class function TUlid.InternalNewUlidFromBytes(base32bytes : TBytes): TUlid;
+class function TUlid.InternalNewUlidFromBytes(const base32bytes : TBytes): TUlid;
 begin
   result := default(TUlId);
 

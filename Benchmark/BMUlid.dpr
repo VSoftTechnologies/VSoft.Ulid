@@ -7,7 +7,7 @@ program BMUlid;
 uses
   System.SysUtils,
   Spring.Benchmark,
-  VSoft.Ulid;
+  VSoft.Ulid in '..\Source\VSoft.Ulid.pas';
 
 procedure BM_Create(const state: TState);
 begin
@@ -18,6 +18,18 @@ begin
     var ulid := TUlid.Create;
   end;
 end;
+
+procedure BM_ToString(const state: TState);
+begin
+  var ulid := TUlid.Create;
+  // Perform setup here
+  for var _ in state do
+  begin
+    // This code gets timed
+    var s := ulid.ToString;
+  end;
+end;
+
 
 procedure BM_Parse(const state: TState);
 begin
@@ -35,6 +47,7 @@ begin
   // Register the function as a benchmark
   Benchmark(BM_Create, 'TUlid.Create');
   Benchmark(BM_Parse, 'TUlid.Parse');
+  Benchmark(BM_Parse, 'TUlid.ToString');
   // Run the benchmark
   Benchmark_Main;
   Readln;
