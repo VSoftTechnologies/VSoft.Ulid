@@ -188,7 +188,6 @@ var
   random : UInt64;
   ts : Int64Rec absolute timestamp;
 begin
-  result := default(TUlId);
   //reverse order!
   result.FTimeStamp0 := ts.Bytes[5];
   result.FTimeStamp1 := ts.Bytes[4];
