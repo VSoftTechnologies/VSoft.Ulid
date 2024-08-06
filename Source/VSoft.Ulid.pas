@@ -45,12 +45,16 @@ type
     class var
       FXorShift64 : TXorShift64;
   private
-    class function InternalNewUlid(timestamp : UInt64) : TUlid;static;
-    class function InternalNewUlidFromBytes(const base32bytes : TBytes) : TUlid;static;
+    class function InternalNewUlid(timestamp : UInt64) : TUlid;static;inline;
+    class function InternalNewUlidFromBytes(const base32bytes : PByte) : TUlid;static;
     class constructor Init;
+    class procedure CheckString(const base32Str : string);overload;static;
+    class procedure CheckString(const base32Str : AnsiString);overload;static;
   public
     class function TryParse(const base32Str : string; out ulid : TUlId) : boolean;static;
-    class function Parse(const base32Str : string) : TUlId;static;
+    class function Parse(const base32Str : string) : TUlId;overload;static;
+    class function Parse(const base32Str : AnsiString) : TUlId;overload;static;
+
     class function Create : TUlid;static;
     class function Empty : TUlid;static;
     class function FromGuid(value : TGuid) : TUlid;static;
@@ -76,10 +80,12 @@ const
                                   7, 8, 9, 255, 255, 255, 255, 255, 255, 255, 10, 11, 12, 13, 14, 15, 16, 17, 1, 18, 19, 1, 20, 21, 0, 22, 23, 24, 25, 26, 255, 27,
                                   28, 29, 30, 31, 255, 255, 255, 255, 255, 255, 10, 11, 12, 13, 14, 15, 16, 17, 1, 18, 19, 1, 20, 21, 0, 22, 23, 24, 25, 26, 255, 27, 28, 29, 30, 31);
 
-  base32StringLen  = 26;
+  cBase32StringLen  = 26;
 
-type //not available in XE2
-    Int64Rec = packed record
+
+type
+  //not available in XE2
+    TUInt64Rec = packed record
     case Integer of
       0: (Lo, Hi: Cardinal);
       1: (Cardinals: array [0..1] of Cardinal);
@@ -88,20 +94,44 @@ type //not available in XE2
   end;
 
 
+{ TXorShift64 }
+
+class function TXorShift64.Create(seed: UInt64): TXorShift64;
+begin
+  if seed <> 0 then
+    result.Fx := seed
+  else
+    result.Fx := 88172645463325252;
+end;
+
+function TXorShift64.IsInit: boolean;
+begin
+  result := Fx <> 0;
+end;
+
+function TXorShift64.Next: UInt64;
+begin
+  Result := Fx;
+  Result := Result xor (Result shl 7);
+  Result := Result xor (Result shr 9);
+  Fx := Result;
+end;
+
+
 function Random64: UInt64;
 var
-  Overlay: Int64Rec absolute Result;
+  Overlay: TUInt64Rec absolute Result;
 begin
   Assert(SizeOf(Overlay)=SizeOf(Result));
-  Overlay.Lo := Random(MaxInt);
-  Overlay.Hi := Random(MaxInt);
+  Overlay.Lo := Cardinal(Random(MaxInt));
+  Overlay.Hi := Cardinal(Random(MaxInt));
 end;
 
 function TUlid.ToString : string;
 var
   p : PChar;
 begin
-  SetLength(result, base32StringLen);
+  SetLength(result, cBase32StringLen);
   p := Pointer(result);
 
   // timestamp
@@ -139,7 +169,7 @@ end;
 
 class function TUlid.TryParse(const base32Str : string; out ulid : TUlId) : boolean;
 begin
-  if (Length(base32Str) <> base32StringLen) then
+  if (Length(base32Str) <> cBase32StringLen) then
     exit(false);
 
   try
@@ -180,8 +210,6 @@ begin
   FXorShift64 := TXorShift64.Create(Random64);
 end;
 
-type
-  TUInt64Rec = array[0..3] of Word;
 
 class function TUlid.InternalNewUlid(timestamp: UInt64): TUlid;
 var
@@ -196,23 +224,16 @@ begin
   result.FTimeStamp4 := ts.Bytes[1];
   result.FTimeStamp5 := ts.Bytes[0];
 
-//  random := FXorShift64.Next;
-//  result.FRandomness0_1 := TUInt64Rec(random)[0];
-//  random := FXorShift64.Next;
-//  result.FRandomness2_9 := random;
-
   random := FXorShift64.Next;
-  PNativeUInt(@result.FRandomness0)^ := NativeUInt(random);  // it is safe to overflow here, might yeild better and simpler asm instruction
+  PNativeUInt(@result.FRandomness0)^ := NativeUInt(random); // only using 0-1 but faster to just overflow here
   random := FXorShift64.Next;
-  PUInt64(@result.FRandomness2)^ := random;
+  PUInt64(@result.FRandomness2)^ := random; // 2-9
 
 end;
 
 
-class function TUlid.InternalNewUlidFromBytes(const base32bytes : TBytes): TUlid;
+class function TUlid.InternalNewUlidFromBytes(const base32bytes : PByte): TUlid;
 begin
-  result := default(TUlId);
-
   result.FTimestamp0 := byte((CharToBase32[base32bytes[0]] shl 5) or CharToBase32[base32bytes[1]]);
   result.FTimestamp1 := byte((CharToBase32[base32bytes[2]] shl 3) or (CharToBase32[base32bytes[3]] shr 2));
   result.FTimestamp2 := byte((CharToBase32[base32bytes[3]] shl 6) or (CharToBase32[base32bytes[4]] shl 1) or (CharToBase32[base32bytes[5]] shr 4));
@@ -241,37 +262,58 @@ begin
   result := Self.Equals(e);
 end;
 
-//borrowed from 12.1
-function NowUTC: TDateTime;
-{$IFDEF MSWINDOWS}
-var
-  SystemTime: TSystemTime;
+class function TUlid.Parse(const base32Str: AnsiString): TUlId;
 begin
-  GetSystemTime(SystemTime);
-  Result := EncodeDate(SystemTime.wYear, SystemTime.wMonth, SystemTime.wDay) +
-    EncodeTime(SystemTime.wHour, SystemTime.wMinute, SystemTime.wSecond, SystemTime.wMilliseconds);
+  CheckString(base32Str);
+  result := TUlid.InternalNewUlidFromBytes(Pointer(base32Str))
 end;
-{$ENDIF MSWINDOWS}
-{$IFDEF POSIX}
-var
-  T: time_t;
-  TV: timeval;
-  UT: tm;
-begin
-  gettimeofday(TV, nil);
-  T := TV.tv_sec;
-  gmtime_r(T, UT);
-  Result := EncodeDate(UT.tm_year + 1900, UT.tm_mon + 1, UT.tm_mday) +
-    EncodeTime(UT.tm_hour, UT.tm_min, UT.tm_sec, TV.tv_usec div 1000);
-end;
-{$ENDIF POSIX}
 
-function UNIXTimeInMilliseconds: Int64;
+
+{$IFDEF MSWINDOWS}
+function UNIXTimeInMilliseconds: UInt64;inline;
+const
+  TimeOffset = 116444736000000000;
 var
+  ft: TFileTime;
+begin
+  GetSystemTimeAsFileTime(ft);
+  result := (UInt64(ft) - UInt64(TimeOffset)) div 10000;
+end;
+{$ELSE}
+//TODO : find an implementation of this for non windows platforms in earlier versions
+// NowUtc only available in 11.3 or later.
+// this is slow.
+function UNIXTimeInMilliseconds: UInt64;inline;
   DT: TDateTime;
 begin
-  DT := NowUTC;
+  DT := TDateTime.NowUTC;
   Result := MilliSecondsBetween(DT, UnixDateDelta);
+end;
+{$ENDIF}
+
+
+
+class procedure TUlid.CheckString(const base32Str: string);
+begin
+  if (Length(base32Str) <> cBase32StringLen) then
+    raise EArgumentException.Create('Invalid base32 string length, length:' + IntToStr(Length(base32Str)) + ' - expected :' + IntToStr(cBase32StringLen));
+end;
+
+class procedure TUlid.CheckString(const base32Str: AnsiString);
+var
+  i : integer;
+  b : byte;
+begin
+  if (Length(base32Str) <> cBase32StringLen) then
+    raise EArgumentException.Create('Invalid base32 string length, length:' + IntToStr(Length(base32Str)) + ' - expected :' + IntToStr(cBase32StringLen));
+
+  //we can do this here since we don't need to convert it.
+  for i := 1 to cBase32StringLen do
+  begin
+    b := Ord(base32Str[i]);
+    if ((b < 48) or ((b > 57) and (b < 65)) or (b > 90))  then
+      raise EArgumentException.Create('Invalid chars in base 32 string');
+  end;
 end;
 
 class function TUlid.Create : TUlid;
@@ -286,34 +328,26 @@ end;
 class function TUlid.Parse(const base32Str : string): TUlId;
 var
   base32bytes : TBytes;
+  buffer : array[0..25] of byte;
+  c : Char;
+  b : Byte;
+  i : integer;
 begin
-  if (Length(base32Str) <> base32StringLen) then
-    raise EArgumentException.Create('Invalid base32 string length, length:' + IntToStr(Length(base32Str)) + ' - expected :' + IntToStr(base32StringLen));
+  TUlid.CheckString(base32Str);
 
-  base32bytes := TEncoding.UTF8.GetBytes(base32Str);
-  result := TUlid.InternalNewUlidFromBytes(base32bytes)
-end;
+  //hacky way to avoid using TEncoding.GetBytes which is slow!
+  for i := 1 to 26 do
+  begin
+    c := base32Str[i];
+    b := byte(c);
+    //        0           9             A            Z
+    if ((b < 48) or ((b > 57) and (b < 65)) or (b > 90))  then
+      raise EArgumentException.Create('Invalid chars in base 32 string');
 
-{ TXorShift64 }
+    buffer[i-1] := b;
+  end;
 
-class function TXorShift64.Create(seed: UInt64): TXorShift64;
-begin
-  if seed <> 0 then
-    result.Fx := seed
-  else
-    result.Fx := 88172645463325252;
-end;
-
-function TXorShift64.IsInit: boolean;
-begin
-  result := Fx <> 0;
-end;
-
-function TXorShift64.Next: UInt64;
-begin
-  Fx := FX xor (Fx shl 7);
-  Fx := Fx xor (Fx shr 9);
-  result := Fx;
+  result := TUlid.InternalNewUlidFromBytes(@buffer[0]);
 end;
 
 

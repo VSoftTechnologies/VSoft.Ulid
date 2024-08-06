@@ -31,13 +31,29 @@ begin
 end;
 
 
-procedure BM_Parse(const state: TState);
+procedure BM_ParseAnsi(const state: TState);
+var
+  s : AnsiString;
 begin
   // Perform setup here
+  s := '01J4JC3MY6S461H3P96FB4QAGS';
   for var _ in state do
   begin
     // This code gets timed
-    var ulid := TUlid.Parse('01J4JC3MY6S461H3P96FB4QAGS');
+    var ulid := TUlid.Parse(s);
+  end;
+end;
+
+procedure BM_Parse(const state: TState);
+var
+  s : string;
+begin
+  // Perform setup here
+  s := '01J4JC3MY6S461H3P96FB4QAGS';
+  for var _ in state do
+  begin
+    // This code gets timed
+    var ulid := TUlid.Parse(s);
   end;
 end;
 
@@ -46,6 +62,7 @@ begin
 
   // Register the function as a benchmark
   Benchmark(BM_Create, 'TUlid.Create');
+  Benchmark(BM_ParseAnsi, 'TUlid.Parse - AnsiString');
   Benchmark(BM_Parse, 'TUlid.Parse');
   Benchmark(BM_Parse, 'TUlid.ToString');
   // Run the benchmark

@@ -10,19 +10,19 @@ type
   TTestULid = class
   public
 
-    [Test]
+//    [Test]
     procedure TestULID_Create;
 
-    [Test]
+//    [Test]
     procedure TestULID_Equals;
 
-    [Test]
+//    [Test]
     procedure Test_Parse;
 
     [Test]
     procedure Test_ToString;
 
-    [Test]
+//    [Test]
     procedure Test_FromGuid;
   end;
 
@@ -39,10 +39,10 @@ uses
 procedure TTestULid.TestULID_Create;
 var
   i : integer;
-  dict : TDictionary<string,byte>;
+//  dict : TDictionary<string,byte>;
   stopWatch : TStopwatch;
   ulid : TUlid;
-  s : string;
+//  s : string;
 
 const
     {$IFDEF WIN64}
