@@ -300,21 +300,27 @@ begin
 end;
 
 class procedure TUlid.CheckString(const base32Str: AnsiString);
+label
+  InvalidChar, InvalidLength;
 var
-  i : integer;
+  i : nativeint;
   b : byte;
 begin
-  if (Length(base32Str) <> cBase32StringLen) then
-    raise EArgumentException.Create('Invalid base32 string length, length:' + IntToStr(Length(base32Str)) + ' - expected :' + IntToStr(cBase32StringLen));
+  if (Length(base32Str) <> cBase32StringLen) then goto InvalidLength;
 
   //we can do this here since we don't need to convert it.
   for i := 1 to cBase32StringLen do
   begin
     b := Ord(base32Str[i]);
-    if ((b < 48) or ((b > 57) and (b < 65)) or (b > 90))  then
-      raise EArgumentException.Create('Invalid chars in base 32 string');
+    if ((b < 48) or ((b > 57) and (b < 65)) or (b > 90)) then goto InvalidChar;
   end;
+  Exit;
+InvalidChar:
+  raise EArgumentException.Create('Invalid chars in base 32 string');
+InvalidLength:
+  raise EArgumentException.Create('Invalid base32 string length, length:' + IntToStr(Length(base32Str)) + ' - expected :' + IntToStr(cBase32StringLen));
 end;
+
 
 class function TUlid.Create : TUlid;
 var
@@ -326,12 +332,13 @@ end;
 
 
 class function TUlid.Parse(const base32Str : string): TUlId;
+label
+  InvalidChar;
 var
-  base32bytes : TBytes;
-  buffer : array[0..25] of byte;
+  buffer : array[1..26] of byte;
   c : Char;
-  b : Byte;
-  i : integer;
+  w : Word;
+  i : NativeInt;
 begin
   TUlid.CheckString(base32Str);
 
@@ -339,15 +346,16 @@ begin
   for i := 1 to 26 do
   begin
     c := base32Str[i];
-    b := byte(c);
+    w := Ord(c);
     //        0           9             A            Z
-    if ((b < 48) or ((b > 57) and (b < 65)) or (b > 90))  then
-      raise EArgumentException.Create('Invalid chars in base 32 string');
-
-    buffer[i-1] := b;
+    if ((w < 48) or ((w > 57) and (w < 65)) or (w > 90)) then goto InvalidChar;
+    buffer[i] := w;
   end;
 
-  result := TUlid.InternalNewUlidFromBytes(@buffer[0]);
+  result := TUlid.InternalNewUlidFromBytes(@buffer[1]);
+  Exit;
+InvalidChar:
+  raise EArgumentException.Create('Invalid chars in base 32 string');
 end;
 
 
