@@ -64,7 +64,7 @@ begin
   Benchmark(BM_Create, 'TUlid.Create');
   Benchmark(BM_ParseAnsi, 'TUlid.Parse - AnsiString');
   Benchmark(BM_Parse, 'TUlid.Parse');
-  Benchmark(BM_Parse, 'TUlid.ToString');
+  Benchmark(BM_ToString, 'TUlid.ToString');
   // Run the benchmark
   Benchmark_Main;
   Readln;
