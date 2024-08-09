@@ -4,6 +4,7 @@
 interface
 
 uses
+  System.SyncObjs,
   System.SysUtils;
 
 
@@ -63,6 +64,11 @@ type
     function IsEmpty : boolean;
   end;
 
+{$IFDEF CPUX86}
+//only declared here to allow inlining.
+procedure AtomicLoad(var target, source: UInt64);
+{$ENDIF}
+
 implementation
 
 
@@ -104,19 +110,61 @@ begin
     result.Fx := 88172645463325252;
 end;
 
+
+
 function TXorShift64.IsInit: boolean;
 begin
   result := Fx <> 0;
 end;
 
-function TXorShift64.Next: UInt64;
-begin
-  Result := Fx;
-  Result := Result xor (Result shl 7);
-  Result := Result xor (Result shr 9);
-  Fx := Result;
-end;
+//function TXorShift64.Next: UInt64;
+//begin
+//  Result := Fx;
+//  Result := Result xor (Result shl 7);
+//  Result := Result xor (Result shr 9);
+//  Fx := Result;
+//end;
 
+{$IF CompilerVersion < 24}
+{$IFDEF CPUX64}
+function AtomicCmpExchange(var Destination: UInt64; Exchange: UInt64; Comparand: Int64): UInt64;
+asm
+      .NOFRAME
+      MOV     RAX,R8
+ LOCK CMPXCHG [RCX],RDX
+end;
+{$ELSE}
+function AtomicCmpExchange(var Destination: UInt64; Exchange: UInt64; Comparand: UInt64): UInt64;
+begin
+    result := WinApi.Windows.InterlockedCompareExchange64(Int64(Destination), Int64(Exchange), Int64(Comparand));
+end;
+{$ENDIF}
+
+{$IFEND}
+
+
+
+{$IFDEF CPUX86}
+procedure AtomicLoad(var target, source: UInt64);
+asm
+  movq xmm0,[source]
+  movq [target],xmm0
+end;
+{$ENDIF}
+function TXorShift64.Next: UInt64;
+var
+  prev: UInt64;
+begin
+  repeat
+    {$IFDEF CPUX86}
+    AtomicLoad(prev, Fx);
+    {$ELSE}
+    prev := Fx;
+    {$ENDIF}
+    Result := prev xor (prev shl 7);
+    Result := Result xor (Result shr 9);
+  until AtomicCmpExchange(Fx, Result, prev) = prev;
+end;
 
 function Random64: UInt64;
 var

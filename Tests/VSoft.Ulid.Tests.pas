@@ -10,19 +10,19 @@ type
   TTestULid = class
   public
 
-//    [Test]
+    [Test]
     procedure TestULID_Create;
 
-//    [Test]
+    [Test]
     procedure TestULID_Equals;
 
-//    [Test]
+    [Test]
     procedure Test_Parse;
 
     [Test]
     procedure Test_ToString;
 
-//    [Test]
+    [Test]
     procedure Test_FromGuid;
   end;
 
@@ -39,10 +39,10 @@ uses
 procedure TTestULid.TestULID_Create;
 var
   i : integer;
-//  dict : TDictionary<string,byte>;
+  dict : TDictionary<string,byte>;
   stopWatch : TStopwatch;
   ulid : TUlid;
-//  s : string;
+  s : string;
 
 const
     {$IFDEF WIN64}
@@ -53,21 +53,22 @@ const
     {$ENDIF}
 
 begin
-//  dict := TDictionary<string,byte>.Create; //slow.
-//  try
+  dict := TDictionary<string,byte>.Create; //slow.
+  try
     stopWatch := TStopwatch.StartNew;
     //using dictionary to detect dupes
     for I := 0 to count -1 do
     begin
       ulid := TUlid.Create;
-//      s := ulid.ToString;
-      //dict.Add(ulid.ToString,0);
+      s := ulid.ToString;
+      dict.Add(ulid.ToString,0);
+     // writeln(s);
     end;
     stopwatch.Stop;
     Writeln(IntToStr(count) + ' uli''s created  in : ' + IntToStr(stopwatch.ElapsedMilliseconds) + 'ms - ' + IntToStr((count div stopWatch.ElapsedMilliseconds)) + ' p/ms' );
-//  finally
-//  //  dict.Free;
-//  end;
+  finally
+    dict.Free;
+  end;
 end;
 
 procedure TTestULid.TestULID_Equals;
