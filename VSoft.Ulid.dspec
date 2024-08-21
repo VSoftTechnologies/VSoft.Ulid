@@ -1,7 +1,7 @@
 {
  "metadata": {
   "id": "VSoft.Ulid",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "description": "ULID generator/parser -  Universally Unique Lexicographically Sortable Identifier\r\n",
   "authors": "Vincent Parrett",
   "projectUrl": "https://github.com/VSoftTechnologies/VSoft.Ulid",

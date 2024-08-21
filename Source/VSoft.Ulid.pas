@@ -332,6 +332,7 @@ end;
 // NowUtc only available in 11.3 or later.
 // this is slow.
 function UNIXTimeInMilliseconds: UInt64;inline;
+var
   DT: TDateTime;
 begin
   DT := TDateTime.NowUTC;
